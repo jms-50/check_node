@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package checknode;
+
+option go_package = "check_node/pb";
+
+service CheckNode {
+  rpc Register(SlaveInfo) returns (RegistrationResponse);
+  rpc SubscribePolicy(SlaveID) returns (stream Policy);
+  rpc ReportEvent(EventLog) returns (Empty);
+  rpc Heartbeat(SlaveID) returns (Empty);
+}
+
+message SlaveInfo {
+  string hostname = 1;
+  string ip_address = 2;
+  string os_version = 3;
+}
+
+message RegistrationResponse {
+  string slave_id = 1;
+}
+
+message SlaveID {
+  string id = 1;
+}
+
+message Policy {
+  repeated string blocked_urls = 1;
+  repeated string blocked_processes = 2;
+  int64 timestamp = 3;
+}
+
+message EventLog {
+  string slave_id = 1;
+  string target = 2;
+  string type = 3; 
+  int64 timestamp = 4;
+}
+
+message Empty {}

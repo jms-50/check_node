@@ -1,0 +1,12 @@
+# Master PC (Nest.js)
+master_pc/node_modules/
+master_pc/dist/
+master_pc/.env
+
+# Slave PC (Go)
+slave_pc/bin/
+slave_pc/*.exe
+
+# OS generated files
+.DS_Store
+Thumbs.db
