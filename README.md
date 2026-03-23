@@ -27,24 +27,11 @@ master to slave and slave to master protocol: gRPC
 ---
 
 ## 프로그램 다이어그램
-'''
-MASTER: Node.js
-SLAVE: Go
-                +-------------------+
-                |                   |
-                |     MASTER PC     |
-                |                   |
-                +-------------------+
-                          ▲
-                          |
-        +--------------[ gRPC ]-------------+
-        |                 |                 |       
-        ▼                 ▼                 ▼   
- +------------+    +------------+     +------------+    
- |  SLAVE PC  |    |  SLAVE PC  |     |  SLAVE PC  |   
- +------------+    +------------+     +------------+
-
-'''
+```mermaid
+graph TD
+    M[MASTER PC<br/>Node.js] -- gRPC --- S1[SLAVE PC<br/>Go]
+    M -- gRPC --- S2[SLAVE PC<br/>Go]
+    M -- gRPC --- S3[SLAVE PC<br/>Go]
 
 ---
 
