@@ -29,10 +29,15 @@ master to slave and slave to master protocol: gRPC
 ## 프로그램 다이어그램
 ```mermaid
 graph TD
-    M[MASTER PC<br/>Node.js] -- gRPC --- S1[SLAVE PC<br/>Go]
-    M -- gRPC --- S2[SLAVE PC<br/>Go]
-    M -- gRPC --- S3[SLAVE PC<br/>Go]
+    M[MASTER PC<br/>Node.js] --- gRPC_L((gRPC))
+    
+    gRPC_L --- S1[SLAVE PC<br/>Go]
+    gRPC_L --- S2[SLAVE PC<br/>Go]
+    gRPC_L --- S3[SLAVE PC<br/>Go]
 
+    style M fill:#f9f,stroke:#333,stroke-width:2px
+    style gRPC_L fill:#fff,stroke:#333,stroke-dasharray: 5 5
+```
 ---
 
 ## TASK
