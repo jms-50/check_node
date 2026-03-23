@@ -47,3 +47,4 @@ graph TD
 - 실행도중 제어 입력 처리
 - master pc 관리자 대시보드
 - DB 구축
+- WMI 이용하는 방향으로 변경하여 polling -> event 방식으로 변경
