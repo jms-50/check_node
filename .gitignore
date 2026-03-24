@@ -10,3 +10,13 @@ slave_pc/*.exe
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# gemini.md
+GEMINI.md
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
