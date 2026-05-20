@@ -16,10 +16,47 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it('/admin/policy (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/admin/policy')
       .expect(200)
-      .expect('Hello World!');
+      .expect((response) => {
+        const body = response.body as {
+          blocked_urls: string[];
+          blocked_processes: string[];
+        };
+
+        expect(body).toMatchObject({
+          blocked_urls: [],
+          blocked_processes: [],
+        });
+      });
+  });
+
+  it('/admin/policy (POST)', () => {
+    return request(app.getHttpServer())
+      .post('/admin/policy')
+      .send({
+        blocked_urls: ['example.com'],
+        blocked_processes: ['notepad.exe'],
+      })
+      .expect(201)
+      .expect((response) => {
+        const body = response.body as {
+          policy: {
+            blocked_urls: string[];
+            blocked_processes: string[];
+          };
+        };
+
+        expect(body.policy).toMatchObject({
+          blocked_urls: ['example.com'],
+          blocked_processes: ['notepad.exe'],
+        });
+      });
   });
 });

@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package checknode;
 
-option go_package = "check_node/pb";
-
 service CheckNode {
   rpc Register(SlaveInfo) returns (RegistrationResponse);
   rpc SubscribePolicy(SlaveID) returns (stream Policy);

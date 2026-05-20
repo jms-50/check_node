@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -8,15 +7,30 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
     }).compile();
 
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  describe('policy', () => {
+    it('returns the current policy', () => {
+      expect(appController.getPolicy()).toMatchObject({
+        blocked_urls: [],
+        blocked_processes: [],
+      });
+    });
+
+    it('updates and returns the policy', () => {
+      const result = appController.updatePolicy({
+        blocked_urls: ['example.com'],
+        blocked_processes: ['notepad.exe'],
+      });
+
+      expect(result.policy).toMatchObject({
+        blocked_urls: ['example.com'],
+        blocked_processes: ['notepad.exe'],
+      });
+      expect(appController.getPolicy()).toMatchObject(result.policy);
     });
   });
 });

@@ -3,9 +3,11 @@ master_pc/node_modules/
 master_pc/dist/
 master_pc/.env
 
-# Slave PC (Go)
+# Slave PC (Rust)
+slave_pc/target/
 slave_pc/bin/
 slave_pc/*.exe
+slave_pc/.env
 
 # OS generated files
 .DS_Store
