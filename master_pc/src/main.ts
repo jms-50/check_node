@@ -14,6 +14,9 @@ async function bootstrap() {
       package: 'checknode',
       protoPath: join(__dirname, '../../pb/service.proto'), // 경로 주의!
       url: '0.0.0.0:50051',
+      loader: {
+        keepCase: true,
+      },
     },
   });
 
@@ -25,4 +28,4 @@ async function bootstrap() {
   console.log('➡️  gRPC Port (For Slaves): 50051');
   console.log('➡️  HTTP Port (For Admins): http://localhost:3000');
 }
-bootstrap();
+void bootstrap();
