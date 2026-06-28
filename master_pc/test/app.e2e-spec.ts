@@ -4,10 +4,14 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 
-describe('AppController (e2e)', () => {
+describe('PolicyController (e2e)', () => {
   let app: INestApplication<App>;
+  let originalAdminApiKey: string | undefined;
 
   beforeEach(async () => {
+    originalAdminApiKey = process.env.ADMIN_API_KEY;
+    delete process.env.ADMIN_API_KEY;
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -18,6 +22,12 @@ describe('AppController (e2e)', () => {
 
   afterEach(async () => {
     await app.close();
+
+    if (originalAdminApiKey) {
+      process.env.ADMIN_API_KEY = originalAdminApiKey;
+    } else {
+      delete process.env.ADMIN_API_KEY;
+    }
   });
 
   it('/admin/policy (GET)', () => {

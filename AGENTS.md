@@ -45,7 +45,7 @@ Go 기반 slave 구현과 Go용 protobuf 생성 코드는 제거됐다. 새 기�
    - gRPC 서버: `0.0.0.0:50051`
 
 2. Slave가 gRPC로 master에 연결한다.
-   - 현재 Rust 코드는 `http://localhost:50051`로 하드코딩되어 있다.
+   - 현재 Rust 코드는 `http://localhost:50051`로 하드코딩되어 있다. (환경변수 또는 `.env` 설정으로 변경 가능)
    - `Register` RPC로 slave ID를 발급받는다.
 
 3. Slave가 `SubscribePolicy` 스트림을 구독한다.
@@ -57,10 +57,10 @@ Go 기반 slave 구현과 Go용 protobuf 생성 코드는 제거됐다. 새 기�
    - `POST /admin/policy`: `blocked_urls`, `blocked_processes` 갱신 및 slave 전파
 
 5. Slave가 Windows 프로세스를 감시한다.
-   - 100ms 주기로 ToolHelp snapshot을 찍는다.
-   - 새 프로세스 또는 PID 재사용을 감지한다.
-   - 차단 목록과 프로세스명이 일치하면 해당 프로세스를 종료한다.
-   - 차단 이벤트는 `ReportEvent` RPC로 master에 보고한다.
+   - **기본 감시 방식**: Windows 환경에서는 WMI 이벤트(`Win32_ProcessStartTrace`/`Win32_ProcessStopTrace`) 기반 실시간 감시를 수행하며, 백그라운드 스레드에서 대기함으로써 CPU 부하를 거의 제로화합니다.
+   - **비-Windows 개발 환경**: 100ms 폴링 방식으로 모의 스캔을 수행합니다.
+   - **초기 베이스라인 동기화**: 에이전트 구동 시작 시점에 1회 스냅샷을 검사하여 이미 실행 중인 프로세스를 즉시 강제 종료하고 리포트합니다.
+   - 차단 이벤트는 `ReportEvent` RPC로 master에 보고합니다.
 
 ## 개발 명령어
 
@@ -103,9 +103,7 @@ cd slave_pc
 cargo test
 ```
 
-현재 Rust 테스트는 0개다. `cargo test`는 컴파일 확인에 가깝다.
-
-Windows 빌드 또는 실제 실행 검증이 중요하다. `slave_pc/src/main.rs`는 Windows API를 직접 사용하므로 macOS/Linux에서의 실행 결과만으로 기능 검증이 완료됐다고 보면 안 된다.
+현재 Rust 테스트는 1개(`config.rs` 설정 테스트)다.
 
 ## 중요한 현재 상태
 
@@ -143,13 +141,9 @@ RPC나 message를 바꿀 때는 master와 slave를 함께 갱신한다.
 
 1. `pb/service.proto` 기준으로 master/slave 계약 변경 여부 결정
 2. master 테스트를 현재 API 기준으로 유지
-3. Rust slave를 모듈 단위로 분리
-   - `grpc`
-   - `policy`
-   - `process_monitor`
-   - `reporting`
+3. Rust slave를 모듈 단위로 유지 관리
 4. Windows 환경에서 실제 프로세스 차단 시나리오 검증
-5. URL 차단과 DB 저장소를 별도 기능으로 설계
+5. URL 차단 기능 설계 및 슬레이브 자동 재연결 메커니즘 구현
 
 ## 코드 작업 원칙
 
@@ -158,7 +152,8 @@ RPC나 message를 바꿀 때는 master와 slave를 함께 갱신한다.
 - 생성된 코드는 수동 수정하지 않는다.
 - Go 구현을 재도입하지 않는다.
 - Windows 전용 동작은 가능한 한 작게 격리해 테스트 가능한 순수 로직과 분리한다.
-- 현재 master의 정책 상태는 메모리 기반이다. DB가 생기기 전까지 재시작 시 정책과 slave 연결 상태는 유지되지 않는다.
+- **정책의 휘발성 및 연결성**: Master의 정책 상태는 순수 메모리 기반(휘발성)입니다. Master 서버가 재시작되면 제한하고자 선언한 정책들은 모두 기억되지 않고 리셋됩니다.
+- **클라이언트 세션 복구**: Master가 재기동되더라도, 기존 실행 중이던 Slave 클라이언트들이 주기적으로 자동 재연결을 시도해 마스터와의 연결 세션은 자동으로 유지 및 복구되도록 구현합니다.
 - `AppController`에 HTTP와 gRPC 로직이 함께 있으므로, 기능이 커지면 controller/service를 분리한다.
 
 ## 검증 체크리스트
