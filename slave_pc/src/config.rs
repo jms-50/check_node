@@ -3,6 +3,7 @@ use std::env;
 pub struct Config {
     pub server_url: String,
     pub hostname: String,
+    pub grpc_shared_token: Option<String>,
 }
 
 impl Config {
@@ -17,9 +18,15 @@ impl Config {
             .or_else(|_| env::var("COMPUTERNAME"))
             .unwrap_or_else(|_| "Windows-Agent-01".to_string());
 
+        let grpc_shared_token = env::var("GRPC_SHARED_TOKEN")
+            .ok()
+            .map(|value| value.trim().to_string())
+            .filter(|value| !value.is_empty());
+
         Self {
             server_url,
             hostname,
+            grpc_shared_token,
         }
     }
 }
@@ -43,29 +50,34 @@ mod tests {
             std::env::remove_var("SERVER_URL");
             std::env::remove_var("HOSTNAME");
             std::env::remove_var("COMPUTERNAME");
+            std::env::remove_var("GRPC_SHARED_TOKEN");
         }
 
         let config_default = Config::load();
         assert_eq!(config_default.server_url, "http://localhost:50051");
         assert_eq!(config_default.hostname, "Windows-Agent-01");
+        assert_eq!(config_default.grpc_shared_token, None);
 
         // --- 시나리오 B: 시스템 환경변수 우선 적용 확인 ---
         unsafe {
             std::env::set_var("SERVER_URL", "http://test-server:12345");
             std::env::set_var("HOSTNAME", "Test-Agent-99");
+            std::env::set_var("GRPC_SHARED_TOKEN", "test-token");
         }
 
         let config_env = Config::load();
         assert_eq!(config_env.server_url, "http://test-server:12345");
         assert_eq!(config_env.hostname, "Test-Agent-99");
+        assert_eq!(config_env.grpc_shared_token.as_deref(), Some("test-token"));
 
         unsafe {
             std::env::remove_var("SERVER_URL");
             std::env::remove_var("HOSTNAME");
+            std::env::remove_var("GRPC_SHARED_TOKEN");
         }
 
         // --- 시나리오 C: .env 파일을 통한 로드 확인 ---
-        let env_content = "SERVER_URL=http://dotenv-server:54321\nHOSTNAME=Dotenv-Agent\n";
+        let env_content = "SERVER_URL=http://dotenv-server:54321\nHOSTNAME=Dotenv-Agent\nGRPC_SHARED_TOKEN=dotenv-token\n";
         std::fs::write(".env", env_content).unwrap();
 
         let config_dotenv = Config::load();
@@ -74,6 +86,7 @@ mod tests {
 
         assert_eq!(config_dotenv.server_url, "http://dotenv-server:54321");
         assert_eq!(config_dotenv.hostname, "Dotenv-Agent");
+        assert_eq!(config_dotenv.grpc_shared_token.as_deref(), Some("dotenv-token"));
 
         // 2. 기존 .env 복구
         if has_dotenv {

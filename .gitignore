@@ -7,7 +7,12 @@ master_pc/.env
 slave_pc/target/
 slave_pc/bin/
 slave_pc/*.exe
+slave_pc/*.log
 slave_pc/.env
+
+# Local test binaries and logs
+/my_test_app
+*.log
 
 # OS generated files
 .DS_Store
