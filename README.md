@@ -100,24 +100,19 @@ gRPC shared token이 설정된 경우 slave는 `x-checknode-token` metadata를 �
 ---
 
 ## 프로그램 다이어그램
-'''
-MASTER: Node.js
-SLAVE: Rust
-                +-------------------+
-                |                   |
-                |     MASTER PC     |
-                |                   |
-                +-------------------+
-                          ▲
-                          |
-        +--------------[ gRPC ]-------------+
-        |                 |                 |
-        ▼                 ▼                 ▼
-  +------------+    +------------+     +------------+
-  |  SLAVE PC  |    |  SLAVE PC  |     |  SLAVE PC  |
-  +------------+    +------------+     +------------+
 
-'''
+```mermaid
+flowchart TD
+    Master["MASTER PC<br/>(Node.js / NestJS)"]
+
+    Slave1["SLAVE PC<br/>(Rust)"]
+    Slave2["SLAVE PC<br/>(Rust)"]
+    SlaveN["SLAVE PC<br/>(Rust)"]
+
+    Slave1 <-->|gRPC| Master
+    Slave2 <-->|gRPC| Master
+    SlaveN <-->|gRPC| Master
+```
 
 ---
 
