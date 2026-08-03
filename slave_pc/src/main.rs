@@ -85,6 +85,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "windows")]
     {
         use tokio::sync::mpsc;
+        use tokio::time::interval;
         use process_monitor::WmiProcessEvent;
 
         println!("🔍 초기 프로세스 맵핑 완료. 실시간 WMI 기반 감시를 시작합니다...");
@@ -94,8 +95,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // 백그라운드 WMI 모니터 스레드 기동
         process_monitor::start_wmi_monitor(tx);
 
-        while let Some(event) = rx.recv().await {
-            monitor.handle_wmi_event(event).await;
+        let mut reconcile_interval = interval(Duration::from_millis(500));
+
+        loop {
+            tokio::select! {
+                event = rx.recv() => {
+                    match event {
+                        Some(event) => monitor.handle_wmi_event(event).await,
+                        None => {
+                            eprintln!("WARNING: WMI monitor channels closed. Falling back to 500ms process scans.");
+                            loop {
+                                sleep(Duration::from_millis(500)).await;
+                                if let Err(e) = monitor.update_and_detect().await {
+                                    eprintln!("WARNING: Process scan fallback failed: {}", e);
+                                }
+                            }
+                        }
+                    }
+                }
+                _ = reconcile_interval.tick() => {
+                    if let Err(e) = monitor.update_and_detect().await {
+                        eprintln!("WARNING: Periodic process map reconcile failed: {}", e);
+                    }
+                }
+            }
         }
     }
 
